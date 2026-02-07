@@ -1,0 +1,42 @@
+# Create/update .gitignore with these crucial lines
+@'
+# Node modules - MUST HAVE THIS
+node_modules/
+
+# Also for nested node_modules
+**/node_modules/
+
+# Lock files
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+
+# Build outputs
+dist/
+build/
+out/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+
+# Backend specific
+uploads/
+*.pem
+
+# Frontend specific
+.cache/
+'@ | Out-File -FilePath .gitignore -Encoding UTF8 -Force
+
+# Add .gitignore
+git add .gitignore
