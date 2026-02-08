@@ -48,7 +48,7 @@ const Navbar = () => {
       // Still logout locally even if API fails
       dispatch(logoutUser());
       localStorage.clear();
-      window.location.href = '/login';
+      navigate('/');
     }
   };
 
