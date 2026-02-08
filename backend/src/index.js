@@ -16,15 +16,8 @@ const profileRouter = require('./routes/profile');
 
 // request.body mei jo data aata vo JSON format mei aata hai to app.use(express()) usko Js object mei convert karta hai
 app.use(cors({
-    origin: [
-        'http://localhost:5173',  // Vite dev server
-        'http://localhost:3000',   // Alternative localhost
-        'https://algonest-dev.netlify.app',  // Your Netlify frontend
-        'https://algonest.netlify.app'       // Future custom domain
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+    origin: true, // Allows all origins
+    credentials: true
 }));
 app.use(express.json());
 app.use(cookieParser());
