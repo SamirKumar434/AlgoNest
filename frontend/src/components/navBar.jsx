@@ -41,7 +41,7 @@ const Navbar = () => {
       delete axiosClient.defaults.headers.common['Authorization'];
       
       // Force redirect to login (full page reload to clear all state)
-      window.location.href = '/login';
+      navigate('/');
       
     } catch (error) {
       console.error('Logout error:', error);
