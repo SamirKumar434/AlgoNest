@@ -112,13 +112,7 @@ const logout = async (req, res) => {
     try {
         const { token } = req.cookies;
         
-        if (token) {
-            const payload = jwt.decode(token);
-            await redisClient.set(`token:${token}`, 'Blocked');
-            await redisClient.expireAt(`token:${token}`, payload.exp);
-        }
-
-        // Clear the cookie
+        // Clear the cookie FIRST to ensure it's always cleared
         res.cookie("token", "", {
             expires: new Date(0),
             httpOnly: true,
@@ -127,11 +121,45 @@ const logout = async (req, res) => {
             path: '/'
         });
 
-        res.status(200).json({ message: "Logged out successfully" });
+        // If token exists, try to blacklist it
+        if (token) {
+            try {
+                // Use jwt.decode instead of jwt.verify to handle expired tokens gracefully
+                const payload = jwt.decode(token);
+                
+                if (payload && payload.exp) {
+                    // Blacklist the token in Redis
+                    await redisClient.set(`token:${token}`, 'Blocked');
+                    await redisClient.expireAt(`token:${token}`, payload.exp);
+                }
+            } catch (jwtError) {
+                // Token is invalid or expired - just log and continue
+                console.log('Token invalid during logout (non-critical):', jwtError.message);
+                // Don't throw error - we still want to clear the cookie
+            }
+        }
+
+        res.status(200).json({ 
+            success: true,
+            message: "Logged out successfully" 
+        });
 
     } catch (err) {
         console.error("Logout error:", err);
-        res.status(503).json({ error: "Logout failed: " + err.message });
+        
+        // Even on error, try to clear the cookie
+        res.cookie("token", "", {
+            expires: new Date(0),
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            path: '/'
+        });
+        
+        res.status(200).json({ 
+            success: true,
+            message: "Logged out successfully (cookie cleared)" 
+        });
     }
 };
 
