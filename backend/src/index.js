@@ -39,7 +39,7 @@ app.use(cors({
 }));
 
 // ✅ HANDLE PREFLIGHT REQUESTS
-app.options('*', cors()); // Enable preflight for all routes
+app.options('/*', cors()); // Enable preflight for all routes
 
 // ✅ MANUAL CORS HEADERS AS FALLBACK
 app.use((req, res, next) => {
