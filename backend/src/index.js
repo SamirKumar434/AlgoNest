@@ -22,46 +22,26 @@ const allowedOrigins = [
   'https://algonest.netlify.app'
 ];
 
-// ✅ FIXED: Proper CORS configuration
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, postman)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
+// 1. Main CORS middleware
+app.use(cors({
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Accept', 'Origin', 'X-Requested-With'],
-  exposedHeaders: ['Set-Cookie']
-};
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+}));
 
-// Apply CORS to all routes
-app.use(cors(corsOptions));
-
-// ✅ FIXED: Handle OPTIONS requests properly
-app.options('*', cors(corsOptions)); // Use cors with options, not just cors()
-
-// Manual CORS headers as backup
-app.use((req, res, next) => {
+// 2. Handle preflight requests
+app.options('*', (req, res) => {
   const origin = req.headers.origin;
+  
   if (allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  next();
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+  res.status(200).send();
 });
 
 app.use(express.json());
