@@ -8,7 +8,7 @@ const { default: isEmail } = require('validator/lib/isEmail');
 ///Register
 authRouter.post('/register', register);
 authRouter.post('/login', login);
-authRouter.post('/logout', userMiddleware, logout);
+authRouter.post('/logout', logout);
 
 // Admin Routes
 authRouter.post('/admin/register', adminMiddleware, adminRegister);
