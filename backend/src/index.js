@@ -16,7 +16,11 @@ const profileRouter = require('./routes/profile');
 
 // request.body mei jo data aata vo JSON format mei aata hai to app.use(express()) usko Js object mei convert karta hai
 app.use(cors({
-    origin: true, // Allows all origins
+    origin: [
+        'https://algonest-dev.netlify.app',
+        'https://algonest.netlify.app',
+        'http://localhost:5173'
+    ],
     credentials: true
 }));
 app.use(express.json());
