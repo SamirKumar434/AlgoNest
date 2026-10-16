@@ -14,15 +14,45 @@ const cors = require("cors");
 const videoRouter = require("./routes/videoCreator");
 const profileRouter = require("./routes/profile");
 
-// request.body mei jo data aata vo JSON format mei aata hai to app.use(express()) usko Js object mei convert karta hai
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
 app.use(express.json());
 app.use(cookieParser());
+
+// Connect to MongoDB and Redis once, reuse across requests (needed for serverless)
+let ready = null;
+const init = () => {
+  if (!ready) {
+    ready = Promise.all([
+      main(),
+      redisClient.isOpen ? null : redisClient.connect(),
+    ]).catch((err) => {
+      ready = null; // allow retry on the next request
+      throw err;
+    });
+  }
+  return ready;
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await init();
+    next();
+  } catch (err) {
+    console.log("Connection error: " + err);
+    res.status(500).json({ error: "Database connection failed" });
+  }
+});
+
 app.use("/user", authRouter);
 app.use("/problem", problemRouter);
 app.use("/submission", submitRouter);
@@ -30,17 +60,17 @@ app.use("/ai", aiRouter);
 app.use("/video", videoRouter);
 app.use("/profile", profileRouter);
 
-const InitalizeConnection = async () => {
-  try {
-    await Promise.all([main(), redisClient.connect()]);
-    console.log("DB Connected");
+// Local development: start a normal server
+if (require.main === module) {
+  init()
+    .then(() => {
+      console.log("DB Connected");
+      app.listen(process.env.PORT, () => {
+        console.log("Server listening at port number: " + process.env.PORT);
+      });
+    })
+    .catch((err) => console.log("Error: " + err));
+}
 
-    app.listen(process.env.PORT, () => {
-      console.log("Server listening at port number: " + process.env.PORT);
-    });
-  } catch (err) {
-    console.log("Error: " + err);
-  }
-};
-
-InitalizeConnection();
+// Vercel: import and serve the exported app
+module.exports = app;
